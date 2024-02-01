@@ -2,8 +2,8 @@ import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
 import { AudioContext } from "standardized-audio-context-mock";
 
 import { AudioPlayer } from "./audio";
-import { NoteName } from "./constants";
-import type { NoteValue } from "./notes";
+import type { NoteValue, Note } from "./notes";
+import { Clef, NoteNames } from "./constants";
 
 const mockedSamples = {
   C2: "C2",
@@ -36,6 +36,7 @@ afterEach(() => {
 
 describe("playNote()", () => {
   test("C4", () => {
+    note = Note(NoteNames.c, 4, Clef.Bass);
     audioPlayer.playNote(0, 4);
     expect(mockedPlayTone.mock.calls[0]).toEqual([0, mockedSamples.C4]);
   });
@@ -46,7 +47,7 @@ describe("playNote()", () => {
     expect(mockedPlayTone.mock.calls[0]).toEqual([-1, mockedSamples.C5]);
   });
 
-  // G6 should use sample C7 for the best sound with pitch shifting
+  // G6 should use sample C7 for the best sound with pitch shifti
   test("G6", () => {
     audioPlayer.playNote(7, 6);
     expect(mockedPlayTone.mock.calls[0]).toEqual([-5, mockedSamples.C7]);
@@ -225,7 +226,7 @@ describe("playDiminishedChord()", () => {
 
     audioPlayer.playDiminishedChord(
       root.originalValue as NoteValue,
-      root.octave
+      root.octave,
     );
 
     expect(mockedPlayTone.mock.calls[0]).toEqual([root.value, root.sample]);
@@ -260,7 +261,7 @@ describe("playDiminishedChord()", () => {
 
     audioPlayer.playDiminishedChord(
       root.originalValue as NoteValue,
-      root.octave
+      root.octave,
     );
 
     expect(mockedPlayTone.mock.calls[0]).toEqual([root.value, root.sample]);
@@ -295,7 +296,7 @@ describe("playDiminishedChord()", () => {
 
     audioPlayer.playDiminishedChord(
       root.originalValue as NoteValue,
-      root.octave
+      root.octave,
     );
 
     expect(mockedPlayTone.mock.calls[0]).toEqual([root.value, root.sample]);
@@ -330,7 +331,7 @@ describe("playDiminishedChord()", () => {
 
     audioPlayer.playDiminishedChord(
       root.originalValue as NoteValue,
-      root.octave
+      root.octave,
     );
 
     expect(mockedPlayTone.mock.calls[0]).toEqual([root.value, root.sample]);
@@ -365,7 +366,7 @@ describe("playDiminishedChord()", () => {
 
     audioPlayer.playDiminishedChord(
       root.originalValue as NoteValue,
-      root.octave
+      root.octave,
     );
 
     expect(mockedPlayTone.mock.calls[0]).toEqual([root.value, root.sample]);

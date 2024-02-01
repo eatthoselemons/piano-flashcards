@@ -1,4 +1,4 @@
-import type { NoteValue, Octave } from "./notes";
+import type { Note } from "./notes";
 
 export class AudioPlayer {
   audioContext?: AudioContext;
@@ -10,12 +10,8 @@ export class AudioPlayer {
     C6: AudioBuffer;
     C7: AudioBuffer;
   };
-  constructor() {
-    this.playNote = this.playNote.bind(this);
-    this.playPowerChord = this.playPowerChord.bind(this);
-    this.playDiminishedChord = this.playDiminishedChord.bind(this);
-    this.resumeAudioContext = this.resumeAudioContext.bind(this);
 
+  constructor() {
     this.audioContext = this.getCrossBrowserAudioContext();
     const audioExtension = this.getSupportedAudioExtension();
 
@@ -30,16 +26,15 @@ export class AudioPlayer {
 
     Promise.all(
       fileNames.map((fileName) =>
-        this.loadSample(
-          `${import.meta.env.BASE_URL}/audio/${fileName}.${audioExtension}`
-        )
-      )
+        this.loadSample(`../audio/${fileName}.${audioExtension}`),
+      ),
     ).then((audioBuffers) => {
       const [C2, C3, C4, C5, C6, C7] = audioBuffers;
       this.samples = { C2, C3, C4, C5, C6, C7 };
     });
   }
-    private getCrossBrowserAudioContext(): AudioContext | undefined {
+
+  private getCrossBrowserAudioContext(): AudioContext | undefined {
     const AudioContextCrossBrowser =
       window.AudioContext ||
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -73,9 +68,9 @@ export class AudioPlayer {
     );
   }
 
-    private getBestSampleForNote(
+  private getBestSampleForNote(
     noteValue: number,
-    octave: number
+    octave: number,
   ): [adjustedNoteValue: number, sample: AudioBuffer] {
     let adjustedNoteValue = noteValue;
     let adjustedOctave = octave;
@@ -101,51 +96,13 @@ export class AudioPlayer {
     }
   }
 
-  playNote(noteValue: NoteValue, octave: Omit<Octave, 1 | 7>) {
+  playNote(note: Note) {
     if (!this.audioContext || !this.samples) {
       return;
     }
 
-    this.playTone(...this.getBestSampleForNote(noteValue, octave as number));
-  }
-
-  playPowerChord(noteValue: NoteValue, octave: Omit<Octave, 1 | 7>) {
-    let fifthValue = noteValue + 7;
-    let fifthOctave = octave as number;
-    let octaveFromRoot = (octave as number) + 1;
-
-    if (fifthValue >= 12) {
-      fifthValue = noteValue + 7 - 12;
-      fifthOctave = (octave as number) + 1;
-    }
-
-    if (octaveFromRoot === 7 && noteValue > 6) {
-      octaveFromRoot = (octave as number) - 1;
-    }
-
-    this.playNote(noteValue, octave);
-    this.playNote(fifthValue as NoteValue, fifthOctave);
-    this.playNote(noteValue, octaveFromRoot);
-  }
-
-  playDiminishedChord(noteValue: NoteValue, octave: Omit<Octave, 1 | 7>) {
-    let minorThirdValue = noteValue + 3;
-    let minorThirdOctave = octave as number;
-    let diminishedFifthValue = noteValue + 6;
-    let diminishedFifthOctave = octave as number;
-
-    if (minorThirdValue >= 12) {
-      minorThirdValue = minorThirdValue - 12;
-      minorThirdOctave = minorThirdOctave + 1;
-    }
-
-    if (diminishedFifthValue >= 12) {
-      diminishedFifthValue = diminishedFifthValue - 12;
-      diminishedFifthOctave = diminishedFifthOctave + 1;
-    }
-
-    this.playNote(noteValue, octave);
-    this.playNote(minorThirdValue as NoteValue, minorThirdOctave);
-    this.playNote(diminishedFifthValue as NoteValue, diminishedFifthOctave);
+    this.playTone(
+      ...this.getBestSampleForNote(note.noteValue, note.octave as number),
+    );
   }
 }
