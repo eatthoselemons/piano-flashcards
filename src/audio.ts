@@ -44,6 +44,7 @@ export class AudioPlayer {
       return;
     }
 
+    // @ts-ignore
     return new AudioContextCrossBrowser();
   }
 
@@ -59,13 +60,53 @@ export class AudioPlayer {
     }
   }
 
+  private applyDecodeAudioDataPolyfill() {
+    if (!this.audioContext) {
+      return;
+    }
+    // Polyfill for old callback-based syntax used in Safari
+    if (this.audioContext.decodeAudioData.length !== 1) {
+      const originalDecodeAudioData = this.audioContext.decodeAudioData.bind(
+        this.audioContext,
+      );
+      this.audioContext.decodeAudioData = (buffer) =>
+        new Promise((resolve, reject) =>
+          originalDecodeAudioData(buffer, resolve, reject),
+        );
+    }
+  }
+
   private loadSample(url: string): Promise<AudioBuffer> {
-    return (
-      fetch(url)
-        .then((response) => response.arrayBuffer())
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        .then((buffer) => this.audioContext!.decodeAudioData(buffer))
-    );
+    return null; // return (
+    //   import(url)
+    //     .then((response) => response.arrayBuffer())
+    //     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    //     .then((buffer) => this.audioContext!.decodeAudioData(buffer))
+    // );
+  }
+
+  private playTone(noteValue: number, sample: AudioBuffer) {
+    console.log("playing tone...");
+    if (!this.audioContext) {
+      return;
+    }
+
+    const source = this.audioContext.createBufferSource();
+    source.buffer = sample;
+
+    // first try to use the detune property for pitch shifting
+    if (source.detune) {
+      source.detune.value = noteValue * 100;
+    } else {
+      // fallback to using playbackRate for pitch shifting
+      source.playbackRate.value = 2 ** (noteValue / 12);
+    }
+
+    source.connect(this.audioContext.destination);
+
+    this.audioContext.resume().then(() => {
+      source.start(0);
+    });
   }
 
   private getBestSampleForNote(
@@ -90,9 +131,9 @@ export class AudioPlayer {
     ];
   }
 
-  resumeAudioContext() {
+  async resumeAudioContext() {
     if (this.audioContext && this.audioContext.state === "suspended") {
-      this.audioContext.resume();
+      await this.audioContext.resume();
     }
   }
 
